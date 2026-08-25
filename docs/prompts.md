@@ -189,6 +189,22 @@ Audit all micro-icons against scraped reference SVGs:
 
 ---
 
+### Prompt 4.5 — Visual SVG Guide, Icon Mapping & Asset Rectification
+- **Date:** 2026-08-24
+- **Model:** Gemini 3.7 Flash (High) / Claude 3.7 Sonnet
+- **Context:** Resolving SVG misalignments, unmapped assets, and missing scraped icons.
+- **Problem Statement:** The initial asset harvester captured 70+ SVGs with generic names (`image (1).svg` to `image (70).svg`). When assembling sections (especially the 50-item Amenities modal and review category meters), the agent struggled to identify which SVG corresponded to which feature and generated generic inline SVGs in some areas. Additionally, 1–2 specific icons (such as the exterior camera icon) were missed during initial scraping.
+- **Prompt:**
+```markdown
+1. Generate a standalone `svg_viewer.html` tool in `public/` that visually displays all scraped SVGs alongside their indexed filenames on a single browser page for side-by-side comparison.
+2. Create an `icon-mapping.ts` configuration organized section-by-section (Header, ListingTitle, AmenitiesModal, Reviews, Location, MeetYourHost, ThingsToKnow).
+3. I will manually cross-reference the live reference site against `svg_viewer.html` and populate `icon-mapping.ts` with the exact SVG filenames for every section.
+4. I have manually extracted the missing security camera SVG from the reference site via DevTools and saved it as `image (cam-svg).svg` in `public/images/`.
+5. Update all components to reference the mapped icons.
+6. Once verified, refactor by inlining the literal SVG filenames into each component and delete `icon-mapping.ts`, `ICON_GUIDE.md`, and `svg_viewer.html` to eliminate dead code and runtime indirection.
+
+---
+
 ## Phase 5: Architectural Refactoring, Safety & Optimization
 
 ### Prompt 5.1 — Context Separation, Error Boundaries & Dead Code Elimination
