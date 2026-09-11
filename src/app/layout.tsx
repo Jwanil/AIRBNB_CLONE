@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import './globals.css';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from '@/context/AuthContext';
+import AuthModal from '@/components/AuthModal';
 
 export const metadata: Metadata = {
   title: 'Mirashya Boutique Villa · Forest View Suite - Airbnb',
@@ -25,10 +27,13 @@ export default function RootLayout({
         <link rel="preload" href="/fonts/AirbnbCerealVF.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
       <body>
-        <Suspense>
-          {children}
-        </Suspense>
-        <Toaster position="bottom-center" />
+        <AuthProvider>
+          <Suspense>
+            {children}
+          </Suspense>
+          <AuthModal />
+          <Toaster position="bottom-center" />
+        </AuthProvider>
       </body>
     </html>
   );

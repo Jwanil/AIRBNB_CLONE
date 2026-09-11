@@ -1,9 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useGallery } from '@/context/GalleryContext';
 import { useBooking } from '@/context/BookingContext';
+import { useAuth } from '@/context/AuthContext';
 
 const navTabs = [
   { id: 'photos', label: 'Photos' },
@@ -15,8 +16,12 @@ const navTabs = [
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeTab, setActiveTab] = useState('photos');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const { setReservationModalOpen } = useGallery();
   const { checkInDate, checkOutDate, isDatesLoading } = useBooking();
+  const { user, openAuthModal, logout } = useAuth();
 
   const nights = checkInDate && checkOutDate
     ? Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / 86400000))
@@ -50,6 +55,16 @@ export default function Header() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const scrollToSection = (id: string) => {
@@ -168,7 +183,13 @@ export default function Header() {
             </div>
 
             <button
-              onClick={() => setReservationModalOpen(true)}
+              onClick={() => {
+                if (!user) {
+                  openAuthModal('login');
+                } else {
+                  setReservationModalOpen(true);
+                }
+              }}
               style={{
                 background: 'linear-gradient(to right, #E61E4D 0%, #E31C5F 50%, #D70466 100%)',
                 color: '#FFFFFF',
@@ -351,28 +372,235 @@ export default function Header() {
               </svg>
             </button>
 
-            {/* 3-Bars Hamburger Menu with soft grey background */}
-            <button
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                backgroundColor: '#F2F2F2',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#222222',
-                transition: 'background-color 0.15s ease',
-              }}
-              className="hover:bg-gray-200 transition"
-              aria-label="Main navigation menu"
-            >
-              <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16" strokeLinecap="round">
-                <path d="M6 10h20M6 16h20M6 22h20" />
-              </svg>
-            </button>
+            {/* User Menu Container with dropdown */}
+            <div style={{ position: 'relative' }} ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen((prev) => !prev)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  height: 44,
+                  padding: user ? '4px 6px 4px 12px' : '4px 10px 4px 12px',
+                  borderRadius: 24,
+                  backgroundColor: '#FFFFFF',
+                  border: '1px solid #DDDDDD',
+                  cursor: 'pointer',
+                  color: '#222222',
+                  boxShadow: menuOpen ? '0 2px 4px rgba(0,0,0,0.14)' : 'none',
+                  transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+                }}
+                className="hover:shadow-md transition"
+                aria-label="Main navigation menu"
+                aria-expanded={menuOpen}
+              >
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" width="16" height="16" strokeLinecap="round">
+                  <path d="M6 10h20M6 16h20M6 22h20" />
+                </svg>
+
+                {user ? (
+                  <div
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: '50%',
+                      backgroundColor: '#222222',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {user.name.charAt(0)}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: '50%',
+                      backgroundColor: '#717171',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <svg viewBox="0 0 32 32" fill="currentColor" width="14" height="14">
+                      <path d="M16 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm0 18c-6.627 0-12 3.582-12 8v2h24v-2c0-4.418-5.373-8-12-8z" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+
+              {/* Dropdown Menu */}
+              {menuOpen && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    width: 240,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 14,
+                    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                    border: '1px solid #EBEBEB',
+                    padding: '8px 0',
+                    zIndex: 100,
+                    fontSize: 14,
+                  }}
+                >
+                  {user ? (
+                    <>
+                      <div style={{ padding: '10px 16px', borderBottom: '1px solid #EBEBEB' }}>
+                        <div style={{ fontWeight: 600, color: '#222222' }}>{user.name}</div>
+                        <div style={{ fontSize: 12, color: '#717171', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {user.email}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setMenuOpen(false)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#222222',
+                          fontFamily: 'inherit',
+                          fontSize: 14,
+                        }}
+                        className="hover:bg-gray-100"
+                      >
+                        Wishlists
+                      </button>
+                      <button
+                        onClick={() => setMenuOpen(false)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#222222',
+                          fontFamily: 'inherit',
+                          fontSize: 14,
+                        }}
+                        className="hover:bg-gray-100"
+                      >
+                        Airbnb your home
+                      </button>
+                      <hr style={{ border: 'none', borderTop: '1px solid #EBEBEB', margin: '4px 0' }} />
+                      <button
+                        onClick={async () => {
+                          setMenuOpen(false);
+                          await logout();
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#C13515',
+                          fontWeight: 500,
+                          fontFamily: 'inherit',
+                          fontSize: 14,
+                        }}
+                        className="hover:bg-gray-100"
+                      >
+                        Log out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setMenuOpen(false);
+                          openAuthModal('register');
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          color: '#222222',
+                          fontFamily: 'inherit',
+                          fontSize: 14,
+                        }}
+                        className="hover:bg-gray-100"
+                      >
+                        Sign up
+                      </button>
+                      <button
+                        onClick={() => {
+                          setMenuOpen(false);
+                          openAuthModal('login');
+                        }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#222222',
+                          fontFamily: 'inherit',
+                          fontSize: 14,
+                        }}
+                        className="hover:bg-gray-100"
+                      >
+                        Log in
+                      </button>
+                      <hr style={{ border: 'none', borderTop: '1px solid #EBEBEB', margin: '4px 0' }} />
+                      <button
+                        onClick={() => setMenuOpen(false)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#222222',
+                          fontFamily: 'inherit',
+                          fontSize: 14,
+                        }}
+                        className="hover:bg-gray-100"
+                      >
+                        Airbnb your home
+                      </button>
+                      <button
+                        onClick={() => setMenuOpen(false)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '10px 16px',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#222222',
+                          fontFamily: 'inherit',
+                          fontSize: 14,
+                        }}
+                        className="hover:bg-gray-100"
+                      >
+                        Help Centre
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

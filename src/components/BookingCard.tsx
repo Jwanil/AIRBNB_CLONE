@@ -5,10 +5,12 @@ import ReservationModal from './ReservationModal';
 import AirbnbIcon from './AirbnbIcon';
 import { useGallery } from '@/context/GalleryContext';
 import { useBooking } from '@/context/BookingContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function BookingCard({ listing }: { listing: any }) {
   const { isReservationModalOpen, setReservationModalOpen } = useGallery();
   const { checkInDate, checkOutDate, isDatesLoading } = useBooking();
+  const { user, openAuthModal } = useAuth();
   const [guests, setGuests] = useState(2);
   const [guestOpen, setGuestOpen] = useState(false);
 
@@ -210,10 +212,18 @@ export default function BookingCard({ listing }: { listing: any }) {
         </div>
 
         {/* Reserve button — pill */}
-        <button onClick={() => setReservationModalOpen(true)}
+        <button
+          onClick={() => {
+            if (!user) {
+              openAuthModal('login');
+            } else {
+              setReservationModalOpen(true);
+            }
+          }}
           style={{ width: '100%', background: 'linear-gradient(to right, #E31C5F, #FF385C)', color: 'white', border: 'none', borderRadius: 40, padding: '13px 0', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.01em', transition: 'opacity 0.15s' }}
           onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+        >
           Reserve
         </button>
 

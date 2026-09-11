@@ -256,3 +256,44 @@ Execute a comprehensive QA, accessibility audit, and build validation across all
 Validate production bundle, optimize static asset caching, and prepare deployment for Vercel. Ensure all environment paths, fonts, and images are statically served with optimal performance.
 ```
 - **Result:** Successfully built and deployed live to Vercel with high Lighthouse scores, edge caching, and zero visual drift from the reference target.
+
+---
+
+## Phase 7: Backend Service & Auth System Instantiation
+
+### Prompt 7.1 — Standalone Auth System Instantiation
+- **Date:** 2026-09-11
+- **Tool / Environment:** Google Antigravity IDE
+- **Model:** Gemini 3.8 Flash (High)
+- **Prompt:**
+```markdown
+@[# Auth System — Implementation Plan] Instantiate
+```
+- **Execution & Implementation:**
+  1. Initialized standalone Express + TypeScript backend service in `server/` with ES Modules (`NodeNext`).
+  2. Implemented Mongoose connection to MongoDB (`mongodb://127.0.0.1:27017/airbnb_clone`), Zod environment validation (`config/env.ts`), and centralized error handling (`ApiError`).
+  3. Created `User` model with 12-round bcrypt pre-save hashing, `comparePassword` instance method, unique email indexing, and automatic password exclusion (`select: false`).
+  4. Built `auth.service.ts` with dual JWT strategy (15-min access token + 7-day refresh token), crypto SHA-256 hashed refresh token storage in Mongo, and UUID-based rotation.
+  5. Implemented `httpOnly`, `sameSite: 'lax'`, `path: '/'` cookie helpers and rate limiting middleware (`express-rate-limit`).
+  6. Implemented all auth routes (`/register`, `/login`, `/refresh`, `/logout`, `/me`, `/logout-all`).
+  7. Tested with comprehensive 40-test automated suite (13/13 service unit tests and 27/27 end-to-end API integration tests).
+  8. Integrated with Next.js frontend: `lib/api.ts` client with auto-refresh on `ACCESS_TOKEN_EXPIRED`, `AuthProvider` & `useAuth()` hook, high-fidelity `AuthModal` component, and gated reservation flows.
+
+---
+
+### Prompt 7.2 — Real-time Password Validation & Show/Hide Password Toggle
+- **Date:** 2026-09-11
+- **Tool / Environment:** Google Antigravity IDE
+- **Model:** Gemini 3.8 Flash (High)
+- **Prompt:**
+```markdown
+Add validation in password and and click to show password, also add these 2 feat in prompt.md
+```
+- **Execution & Implementation:**
+  1. **Click-to-Show/Hide Password**: Added an interactive "Show" / "Hide" toggle button in the password field header of `AuthModal.tsx` across both Log in and Sign up modes, dynamically toggling input visibility (`type="text"` vs `type="password"`).
+  2. **Real-time Password Validation & Strength Meter**:
+     - Added a dynamic 4-segment visual strength meter bar (Weak, Fair, Good, Strong) in Sign up mode.
+     - Added interactive checklist indicators for criteria: min 8 characters, at least 1 letter, at least 1 number, transitioning live from grey (`○`) to green (`✓`) as user types.
+     - Added client-side validation guard blocking form submission until all password criteria are met.
+
+
